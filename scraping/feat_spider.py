@@ -114,7 +114,7 @@ class FeatListSpider(scrapy.spiders.Spider):
             "extra_data": extra_data[:-2]
         }
 
-        with open(f"../feats/{filename}.json", 'w') as f:
+        with open(f"../scraped_data/feats/{filename}.json", 'w') as f:
             f.write(
                 json.dumps(
                     self.interpret_feat(feat_data),
