@@ -52,26 +52,43 @@ class Feat(models.Model):
     prerequisite_names = models.CharField(
         max_length=700
     )
-    effects = models.ManyToManyField(
-        'NumericalFeatEffect',
-        blank=True
-    )
-    requisites = models.ManyToManyField(
-        'NumericalFeatRequisite',
-        blank=True
-    )
 
     def __str__(self):
         return f"Feat <{self.name}>"
 
 
-class NumericalFeatEffect(models.Model):
+class BaseFeatEffect(models.Model):
+    feat = models.ForeignKey(
+        Feat,
+        on_delete=models.CASCADE,
+        related_name='effects'
+    )
+    
+    class Meta:
+        abstract = True
+
+
+class BaseFeatModifier(BaseFeatEffect):
     modifier = models.IntegerField()
+
+    class Meta:
+        abstract = True
+
+
+class NumericalFeatEffect(BaseFeatModifier):
     modify = models.ForeignKey(
         ContentType,
         on_delete=models.CASCADE
     )
     modify_item_id = models.IntegerField()
+
+    def modifiables():
+        import itertools
+        from .skill import Skill
+        return itertools.chain(
+            Skill.objects.all(),
+            Skill.objects.none()
+        )
 
     @property
     def modified_stat(self):
@@ -79,11 +96,16 @@ class NumericalFeatEffect(models.Model):
 
     def __str__(self):
         return (
-            f"NumericalFeatEffect: <{self.modifier} to {self.modified_stat}>"
+            f"{self._meta.object_name}: <{self.modifier} to {self.modified_stat}>"
         )
 
 
 class NumericalFeatRequisite(models.Model):
+    feat = models.ForeignKey(
+        Feat,
+        on_delete=models.CASCADE,
+        related_name='requisites'
+    )
     required_value = models.IntegerField
     required = models.ForeignKey(
         ContentType,
@@ -97,5 +119,5 @@ class NumericalFeatRequisite(models.Model):
 
     def __str__(self):
         return (
-            f"NumericalFeatEffect: <{self.required_value} {self.required_stat}>"  # NOQA
+            f"NumericalFeatRequisite: <{self.required_value} {self.required_stat}>"  # NOQA
         )
